@@ -1,7 +1,7 @@
 # CS50 Summer 2020, Tiny Search Engine
-## Your name
+## Garrett Johnston
 
-GitHub username:
+GitHub username: garrettjohnston99
 
 To build, run `make`.
 

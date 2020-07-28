@@ -325,7 +325,7 @@ webpage_getNextWord(webpage_t *page, int *pos)
  *    10. update *pos to position after the URL
  *    11. create new character buffer for result and return it
  */
-char *
+char * 
 webpage_getNextURL(webpage_t *page, int *pos)
 {
   // make sure we have text and base url, and valid arg
