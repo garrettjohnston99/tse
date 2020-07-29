@@ -18,8 +18,9 @@ crawler.o: ../libcs50/webpage.h ../libcs50/memory.h
 .PHONY: clean test 
 
 test:
-
+	bash -v testing.sh
 
 clean:
 	rm -f $(PROG)
 	rm -f *~ *.o 
+	rm -f testDir/*

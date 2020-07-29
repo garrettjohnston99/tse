@@ -1,0 +1,454 @@
+bash -v testing.sh
+switchml () {  typeset swfound=1;
+ if [ "${MODULES_USE_COMPAT_VERSION:-0}" = '1' ]; then
+ typeset swname='main';
+ if [ -e /usr/share/Modules/libexec/modulecmd.tcl ]; then
+ typeset swfound=0;
+ unset MODULES_USE_COMPAT_VERSION;
+ fi;
+ else
+ typeset swname='compatibility';
+ if [ -e /usr/share/Modules/libexec/modulecmd-compat ]; then
+ typeset swfound=0;
+ MODULES_USE_COMPAT_VERSION=1;
+ export MODULES_USE_COMPAT_VERSION;
+ fi;
+ fi;
+ if [ $swfound -eq 0 ]; then
+ echo "Switching to Modules $swname version";
+ source /usr/share/Modules/init/bash;
+ else
+ echo "Cannot switch to Modules $swname version, command not found";
+ return 1;
+ fi
+}
+module () {  _module_raw "$@" 2>&1
+}
+_module_raw () {  unset _mlshdbg;
+ if [ "${MODULES_SILENT_SHELL_DEBUG:-0}" = '1' ]; then
+ case "$-" in 
+ *v*x*)
+ set +vx;
+ _mlshdbg='vx'
+ ;;
+ *v*)
+ set +v;
+ _mlshdbg='v'
+ ;;
+ *x*)
+ set +x;
+ _mlshdbg='x'
+ ;;
+ *)
+ _mlshdbg=''
+ ;;
+ esac;
+ fi;
+ unset _mlre _mlIFS;
+ if [ -n "${IFS+x}" ]; then
+ _mlIFS=$IFS;
+ fi;
+ IFS=' ';
+ for _mlv in ${MODULES_RUN_QUARANTINE:-};
+ do
+ if [ "${_mlv}" = "${_mlv##*[!A-Za-z0-9_]}" -a "${_mlv}" = "${_mlv#[0-9]}" ]; then
+ if [ -n "`eval 'echo ${'$_mlv'+x}'`" ]; then
+ _mlre="${_mlre:-}${_mlv}_modquar='`eval 'echo ${'$_mlv'}'`' ";
+ fi;
+ _mlrv="MODULES_RUNENV_${_mlv}";
+ _mlre="${_mlre:-}${_mlv}='`eval 'echo ${'$_mlrv':-}'`' ";
+ fi;
+ done;
+ if [ -n "${_mlre:-}" ]; then
+ eval `eval ${_mlre}/usr/bin/tclsh /usr/share/Modules/libexec/modulecmd.tcl bash '"$@"'`;
+ else
+ eval `/usr/bin/tclsh /usr/share/Modules/libexec/modulecmd.tcl bash "$@"`;
+ fi;
+ _mlstatus=$?;
+ if [ -n "${_mlIFS+x}" ]; then
+ IFS=$_mlIFS;
+ else
+ unset IFS;
+ fi;
+ unset _mlre _mlv _mlrv _mlIFS;
+ if [ -n "${_mlshdbg:-}" ]; then
+ set -$_mlshdbg;
+ fi;
+ unset _mlshdbg;
+ return $_mlstatus
+}
+# bash testfile for ./crawler
+# run by make test as bash -v testing.sh &> testing.out
+# compares to letters-depth-4, toscrape-depth-1, and wikipedia-depth-1
+# removed dummy files in crawler.c
+# Garrett Johnston CS50 20X
+
+# create dirs if necessary
+if [[ ! -d "letters4" && ! -w "letters4" ]];
+then
+    mkdir "letters4"
+    chmod u+w "letters4"
+fi
+
+if [[ ! -d "letters-depth-4" ]];
+then
+    cp -r ~cs50/data/tse-output/letters-depth-4 .
+    echo "getting letters-depth-4"
+fi
+getting letters-depth-4
+
+if [[ ! -d "toScrape1" && ! -w "toScrape1" ]];
+then
+    mkdir "toScrape1"
+    chmod u+w "toScrape1"
+fi
+
+if [[ ! -d "toscrape-depth-1" ]];
+then
+    cp -r ~cs50/data/tse-output/toscrape-depth-1 .
+    echo "getting toscrape-depth-1"
+fi
+getting toscrape-depth-1
+
+if [[ ! -d "wikipedia1" && ! -w "wikipedia1" ]];
+then
+    mkdir "wikipedia1"
+    chmod u+w "wikipedia1"
+fi
+
+if [[ ! -d "wikipedia-depth-1" ]];
+then
+    cp -r ~cs50/data/tse-output/wikipedia-depth-1 .
+    echo "getting wikipedia-depth-1"
+fi
+getting wikipedia-depth-1
+
+if [[ ! -d "testDir" && ! -w "testDir" ]];
+then
+    mkdir "testDir"
+    chmod u+w "testDir"
+fi
+
+
+
+#### INVALID ARGUMENTS ####
+# invalid # args
+./crawler
+invalid # of arguments
+
+# invalid seed
+./crawler http://cs.dartmouth.edu testDir 0
+Given URL is not internal. Must start with http://old-www.cs.dartmouth.edu
+
+# invalid directory
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html notTestDir 0
+notTestDir is not a directory or unwriteable
+
+# invalid maxDepth
+./crawler http://old-www.cs.dartmouth.edu/~cs50/index.html testDir 100
+Max depth argument either not an integer or out of bounds. Must be between 0 and 10
+
+
+#### FUNCTIONALITY/ACCURACY ####
+# letters to depth 4
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html letters4 4
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html at letters4/1
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/index.html for URLs
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/A.html
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/A.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/A.html at letters4/2
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/A.html for URLs
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/B.html
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/B.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/B.html at letters4/3
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/B.html for URLs
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/C.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/D.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/E.html
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/E.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/E.html at letters4/4
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/E.html for URLs
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/F.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/G.html
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/G.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/G.html at letters4/5
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/F.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/F.html at letters4/6
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/D.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/D.html at letters4/7
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/D.html for URLs
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/C.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/C.html at letters4/8
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/letters/C.html for URLs
+
+# toscrape to depth 1
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/index.html toScrape1 1
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/index.html at toScrape1/1
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/index.html for URLs
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books_1/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/travel_2/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/mystery_3/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/historical-fiction_4/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/sequential-art_5/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/classics_6/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/philosophy_7/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/romance_8/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/womens-fiction_9/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/fiction_10/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/childrens_11/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/religion_12/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/nonfiction_13/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/music_14/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/default_15/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/science-fiction_16/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/sports-and-games_17/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/add-a-comment_18/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/fantasy_19/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/new-adult_20/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/young-adult_21/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/science_22/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/poetry_23/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/paranormal_24/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/art_25/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/psychology_26/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/autobiography_27/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/parenting_28/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/adult-fiction_29/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/humor_30/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/horror_31/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/history_32/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/food-and-drink_33/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/christian-fiction_34/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/business_35/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/biography_36/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/thriller_37/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/contemporary_38/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/spirituality_39/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/academic_40/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/self-help_41/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/historical_42/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/christian_43/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/suspense_44/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/short-stories_45/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/novels_46/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/health_47/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/politics_48/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/cultural_49/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/erotica_50/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/crime_51/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/a-light-in-the-attic_1000/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/tipping-the-velvet_999/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/soumission_998/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/sharp-objects_997/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/sapiens-a-brief-history-of-humankind_996/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-requiem-red_995/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-dirty-little-secrets-of-getting-your-dream-job_994/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-coming-woman-a-novel-based-on-the-life-of-the-infamous-feminist-victoria-woodhull_993/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-boys-in-the-boat-nine-americans-and-their-epic-quest-for-gold-at-the-1936-berlin-olympics_992/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-black-maria_991/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/starving-hearts-triangular-trade-trilogy-1_990/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/shakespeares-sonnets_989/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/set-me-free_988/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/scott-pilgrims-precious-little-life-scott-pilgrim-1_987/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/rip-it-up-and-start-again_986/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/our-band-could-be-your-life-scenes-from-the-american-indie-underground-1981-1991_985/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/olio_984/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/libertarianism-for-beginners_982/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/its-only-the-himalayas_981/index.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/page-2.html
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/page-2.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/page-2.html at toScrape1/2
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/its-only-the-himalayas_981/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/its-only-the-himalayas_981/index.html at toScrape1/3
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/libertarianism-for-beginners_982/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/libertarianism-for-beginners_982/index.html at toScrape1/4
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/mesaerion-the-best-science-fiction-stories-1800-1849_983/index.html at toScrape1/5
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/olio_984/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/olio_984/index.html at toScrape1/6
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/our-band-could-be-your-life-scenes-from-the-american-indie-underground-1981-1991_985/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/our-band-could-be-your-life-scenes-from-the-american-indie-underground-1981-1991_985/index.html at toScrape1/7
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/rip-it-up-and-start-again_986/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/rip-it-up-and-start-again_986/index.html at toScrape1/8
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/scott-pilgrims-precious-little-life-scott-pilgrim-1_987/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/scott-pilgrims-precious-little-life-scott-pilgrim-1_987/index.html at toScrape1/9
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/set-me-free_988/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/set-me-free_988/index.html at toScrape1/10
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/shakespeares-sonnets_989/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/shakespeares-sonnets_989/index.html at toScrape1/11
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/starving-hearts-triangular-trade-trilogy-1_990/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/starving-hearts-triangular-trade-trilogy-1_990/index.html at toScrape1/12
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-black-maria_991/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-black-maria_991/index.html at toScrape1/13
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-boys-in-the-boat-nine-americans-and-their-epic-quest-for-gold-at-the-1936-berlin-olympics_992/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-boys-in-the-boat-nine-americans-and-their-epic-quest-for-gold-at-the-1936-berlin-olympics_992/index.html at toScrape1/14
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-coming-woman-a-novel-based-on-the-life-of-the-infamous-feminist-victoria-woodhull_993/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-coming-woman-a-novel-based-on-the-life-of-the-infamous-feminist-victoria-woodhull_993/index.html at toScrape1/15
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-dirty-little-secrets-of-getting-your-dream-job_994/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-dirty-little-secrets-of-getting-your-dream-job_994/index.html at toScrape1/16
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-requiem-red_995/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/the-requiem-red_995/index.html at toScrape1/17
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/sapiens-a-brief-history-of-humankind_996/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/sapiens-a-brief-history-of-humankind_996/index.html at toScrape1/18
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/sharp-objects_997/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/sharp-objects_997/index.html at toScrape1/19
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/soumission_998/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/soumission_998/index.html at toScrape1/20
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/tipping-the-velvet_999/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/tipping-the-velvet_999/index.html at toScrape1/21
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/a-light-in-the-attic_1000/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/a-light-in-the-attic_1000/index.html at toScrape1/22
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/crime_51/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/crime_51/index.html at toScrape1/23
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/erotica_50/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/erotica_50/index.html at toScrape1/24
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/cultural_49/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/cultural_49/index.html at toScrape1/25
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/politics_48/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/politics_48/index.html at toScrape1/26
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/health_47/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/health_47/index.html at toScrape1/27
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/novels_46/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/novels_46/index.html at toScrape1/28
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/short-stories_45/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/short-stories_45/index.html at toScrape1/29
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/suspense_44/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/suspense_44/index.html at toScrape1/30
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/christian_43/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/christian_43/index.html at toScrape1/31
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/historical_42/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/historical_42/index.html at toScrape1/32
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/self-help_41/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/self-help_41/index.html at toScrape1/33
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/academic_40/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/academic_40/index.html at toScrape1/34
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/spirituality_39/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/spirituality_39/index.html at toScrape1/35
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/contemporary_38/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/contemporary_38/index.html at toScrape1/36
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/thriller_37/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/thriller_37/index.html at toScrape1/37
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/biography_36/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/biography_36/index.html at toScrape1/38
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/business_35/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/business_35/index.html at toScrape1/39
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/christian-fiction_34/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/christian-fiction_34/index.html at toScrape1/40
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/food-and-drink_33/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/food-and-drink_33/index.html at toScrape1/41
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/history_32/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/history_32/index.html at toScrape1/42
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/horror_31/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/horror_31/index.html at toScrape1/43
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/humor_30/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/humor_30/index.html at toScrape1/44
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/adult-fiction_29/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/adult-fiction_29/index.html at toScrape1/45
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/parenting_28/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/parenting_28/index.html at toScrape1/46
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/autobiography_27/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/autobiography_27/index.html at toScrape1/47
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/psychology_26/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/psychology_26/index.html at toScrape1/48
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/art_25/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/art_25/index.html at toScrape1/49
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/paranormal_24/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/paranormal_24/index.html at toScrape1/50
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/poetry_23/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/poetry_23/index.html at toScrape1/51
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/science_22/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/science_22/index.html at toScrape1/52
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/young-adult_21/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/young-adult_21/index.html at toScrape1/53
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/new-adult_20/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/new-adult_20/index.html at toScrape1/54
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/fantasy_19/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/fantasy_19/index.html at toScrape1/55
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/add-a-comment_18/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/add-a-comment_18/index.html at toScrape1/56
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/sports-and-games_17/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/sports-and-games_17/index.html at toScrape1/57
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/science-fiction_16/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/science-fiction_16/index.html at toScrape1/58
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/default_15/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/default_15/index.html at toScrape1/59
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/music_14/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/music_14/index.html at toScrape1/60
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/nonfiction_13/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/nonfiction_13/index.html at toScrape1/61
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/religion_12/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/religion_12/index.html at toScrape1/62
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/childrens_11/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/childrens_11/index.html at toScrape1/63
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/fiction_10/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/fiction_10/index.html at toScrape1/64
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/womens-fiction_9/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/womens-fiction_9/index.html at toScrape1/65
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/romance_8/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/romance_8/index.html at toScrape1/66
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/philosophy_7/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/philosophy_7/index.html at toScrape1/67
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/classics_6/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/classics_6/index.html at toScrape1/68
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/sequential-art_5/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/sequential-art_5/index.html at toScrape1/69
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/historical-fiction_4/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/historical-fiction_4/index.html at toScrape1/70
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/mystery_3/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/mystery_3/index.html at toScrape1/71
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/travel_2/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books/travel_2/index.html at toScrape1/72
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books_1/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/toscrape/catalogue/category/books_1/index.html at toScrape1/73
+
+# wikipedia to depth 1
+./crawler http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html wikipedia1 1
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html at wikipedia1/1
+scanning http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/index.html for URLs
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Computer_science.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/C_(programming_language).html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Unix.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dartmouth_College.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Hash_table.html
+found new page: http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Linked_list.html
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Linked_list.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Linked_list.html at wikipedia1/2
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Hash_table.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Hash_table.html at wikipedia1/3
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dartmouth_College.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Dartmouth_College.html at wikipedia1/4
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Unix.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Unix.html at wikipedia1/5
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/C_(programming_language).html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/C_(programming_language).html at wikipedia1/6
+got html for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Computer_science.html
+saved page for http://old-www.cs.dartmouth.edu/~cs50/data/tse/wikipedia/Computer_science.html at wikipedia1/7
+
+# check differences 
+if diff letters-depth-4 letters4
+then   
+    echo "letters passed"
+else
+    echo "letters failed"
+fi
+letters passed
+
+if diff toscrape-depth-1 toScrape1
+then   
+    echo "toscrape passed"
+else
+    echo "toscrape failed"
+fi
+toscrape passed
+
+if diff wikipedia-depth-1 wikipedia1
+then   
+    echo "wikipedia passed"
+else
+    echo "wikipedia failed"
+fi
+wikipedia passed
