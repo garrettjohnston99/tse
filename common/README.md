@@ -5,4 +5,4 @@ To compile: `make`.
 
 To make clean: `make clean`.
 
-Currently contains utilities for crawler.c in pagedir.c
+Currently contains utilities for crawler.c in pagedir.c.
