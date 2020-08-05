@@ -41,7 +41,7 @@ int main(const int argc, char *argv[]) {
     }
 
     /***** VALIDATE DIRECTORY *****/
-    if (!validateDirectory(argv[2])) {
+    if (!validateDirectory(argv[2], "/.crawler", "w")) {
         fprintf(stderr, "%s is not a directory or unwriteable\n", argv[2]);
         return 3;
     }

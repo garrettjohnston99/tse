@@ -24,7 +24,7 @@
 // Create a new hashtable. Initializes num_slots size array of 
 // pointers to sets. See hashtable.c
 hashtable_t *hashtable_new(const int num_slots) {
-    hashtable_t *ht = count_malloc(sizeof(hashtable_t));
+    hashtable_t *ht = count_malloc(sizeof(hashtable_t*));
     if (ht == NULL) return NULL;
 
     // Allocate memory for array of pointers to sets

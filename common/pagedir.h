@@ -12,10 +12,16 @@
 
 /*
  * Validates a directory as existing & writeable to
- * Creates a dummy file to write to
+ * creates a dummy file if mode == 'w'/tries to read a dummy file if mode == 'r'
+ *
  */
-bool validateDirectory(const char *dirPath);
+bool validateDirectory(const char *dirPath, const char *dummyName, const char* mode);
 
+/*
+ * Validates a file as existing & writeable to
+ * If doesn't exist, creates it
+ */
+bool validateFile(const char *fileName);
 
 /*
  * Saves a page's HTML to path given in *pageDir. True for success, false for issue w/ file

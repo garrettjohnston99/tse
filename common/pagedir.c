@@ -15,15 +15,13 @@
 #include <string.h>
 
 
-
 /*** validateDirectory ***/
 // Makes sure directory exists & writeable to by creating a dummy file
-bool validateDirectory(const char *dirPath) {
-    char *dummyFile = malloc(strlen(dirPath)+1+6);
-    strcpy(dummyFile, dirPath);
-    strcat(dummyFile, "/.crawler");
+bool validateDirectory(const char *dirPath, const char *dummyName, const char* mode) {
+    char *dummyFile = malloc(strlen(dirPath)+strlen(dummyName)+1);
+    sprintf(dummyFile, "%s%s", dirPath, dummyName);
 
-    FILE *dummy = fopen(dummyFile, "w");
+    FILE *dummy = fopen(dummyFile, mode);
     
     if (dummy == NULL) {
         free(dummyFile);
@@ -34,6 +32,19 @@ bool validateDirectory(const char *dirPath) {
     fclose(dummy); 
     free(dummyFile);
 
+    return true;
+}
+
+/*** validateFile ***/
+// Creates a file if necessary to make sure fileName exists as af ile
+bool validateFile(const char *fileName) {
+    FILE *fp = fopen(fileName, "w");
+
+    if (fp == NULL) {
+        return false;
+    }
+
+    fclose(fp);
     return true;
 }
 
