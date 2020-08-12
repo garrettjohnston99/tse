@@ -18,8 +18,8 @@
 /*** validateDirectory ***/
 // Makes sure directory exists & writeable to by creating a dummy file
 bool validateDirectory(const char *dirPath, const char *dummyName, const char* mode) {
-    char *dummyFile = malloc(strlen(dirPath)+strlen(dummyName)+1);
-    sprintf(dummyFile, "%s%s", dirPath, dummyName);
+    char *dummyFile = malloc(strlen(dirPath)+strlen(dummyName)+2);
+    sprintf(dummyFile, "%s/%s", dirPath, dummyName);
 
     FILE *dummy = fopen(dummyFile, mode);
     
