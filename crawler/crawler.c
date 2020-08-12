@@ -1,10 +1,6 @@
 /*
- * crawler.c 
- *
- *
- *
- *
- *
+ * crawler.c - crawl webpages and create text documents containing HTML
+ * see README.md, IMPLEMENTATION.md, DESIGN.md
  *
  * Garrett Johnston CS50 20X
  */
