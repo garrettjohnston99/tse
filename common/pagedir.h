@@ -5,10 +5,13 @@
  * Garrett Johnston CS50 20X
  */ 
 
+#ifndef __PAGEDIR_H
+#define __PAGEDIR_H
 
-#include "../libcs50/webpage.h"
-#include "../libcs50/hashtable.h"
-#include "../libcs50/bag.h"
+
+#include "webpage.h"
+#include "hashtable.h"
+#include "bag.h"
 
 /*
  * Validates a directory as existing & writeable to
@@ -21,7 +24,7 @@ bool validateDirectory(const char *dirPath, const char *dummyName, const char* m
  * Validates a file as existing & writeable to
  * If doesn't exist, creates it
  */
-bool validateFile(const char *fileName);
+bool validateFile(const char *fileName, const char *mode);
 
 /*
  * Saves a page's HTML to path given in *pageDir. True for success, false for issue w/ file
@@ -37,3 +40,5 @@ void pageSaver(webpage_t *page, const char *pageDir, int id);
  * toVisit bag for later visiting.
  */
 void pageScanner(bag_t *toVisit, hashtable_t *seen, webpage_t *page);
+
+#endif // __PAGEDIR_H

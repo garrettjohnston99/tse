@@ -5,10 +5,10 @@
  * Garrett Johnston CS50 20X
  */
 
- #include "../libcs50/counters.h"
- #include "../libcs50/hashtable.h"
- #include "../libcs50/file.h"
- #include "../libcs50/webpage.h"
+ #include "counters.h"
+ #include "hashtable.h"
+ #include "file.h"
+ #include "webpage.h"
  #include "index.h"
  #include "word.h"
  #include <math.h>
@@ -102,6 +102,19 @@ void index_increment(index_t *idx, const char *word, const int docID) {
             counters_add(ctrs, docID);
         }
     }
+}
+
+
+/***** INDEX_GET *****/
+// Get the counterset that corresponds to the key; see index.h
+counters_t * index_get(index_t *idx, const char *key) {
+    if (key == NULL) return NULL;
+
+    hashtable_t *ht = index_get_ht(idx);
+
+    if (ht == NULL) return NULL;
+
+    return hashtable_find(ht, key);
 }
 
 

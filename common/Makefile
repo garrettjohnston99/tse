@@ -3,9 +3,9 @@
 
 OBJS = index.o pagedir.o word.o 
 LIB = common.a
-LIBS = ../libcs50/libcs50-given.a -lm
+LIBS = ../libcs50/libcs50.a -lm
 
-FLAGS = 
+FLAGS = -I../libcs50
 
 CFLAGS = -Wall -pedantic -std=c11 -ggdb $(FLAGS) 
 CC = gcc

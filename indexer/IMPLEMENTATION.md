@@ -1,4 +1,4 @@
-# indexer.c
+# TSE Indexer Implementation Spec
 ## Garrett Johnston CS50 20X
 
 Implemented as pseudocode is described in DESIGN.md & REQUIREMENTS.md

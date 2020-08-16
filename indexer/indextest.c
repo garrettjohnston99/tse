@@ -13,7 +13,7 @@
  #include <stdlib.h>
  #include <stdio.h>
  #include <string.h>
- #include "../common/index.h"
+ #include "index.h"
 
 
  int main(const int argc, const char *argv[]) {

@@ -12,8 +12,8 @@ if [[ ! -d "testDir" ]]; then
     mkdir "testDir"
     chmod u+rw "testDir"
 
-    # letters to depth 6
-    echo "getting letters-depth-6 and its index"
+    # letters to depth 4
+    echo "getting letters-depth-4 and its index"
     cp -r ~cs50/data/tse-output/letters-depth-4/ ./testDir
     cp ~cs50/data/tse-output/letters-index-4 ./testDir
 
@@ -41,7 +41,7 @@ fi
 
 
 #### FUNCTIONALITY/ACCURACY ####
-# letters to depth 6
+# letters to depth 4
 ./indexer ./testDir/letters-depth-4 ./testDir/my-letters-index-4
 
 # toscrape to depth 1

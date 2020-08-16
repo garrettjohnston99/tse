@@ -1,19 +1,18 @@
 /*
- * indexer.c 
+ * indexer.c - see README.md, IMPLEMENTATION.md
  *
- *
- *
+ * Usage: ./indexer crawlerDir indexFilename
  *
  * Garrett Johnston CS50 20X
  */
 
  #include <stdio.h>
  #include <string.h>
- #include "../libcs50/hashtable.h"
- #include "../libcs50/counters.h"
- #include "../libcs50/file.h"
- #include "../common/pagedir.h"
- #include "../common/index.h"
+ #include "hashtable.h"
+ #include "counters.h"
+ #include "file.h"
+ #include "pagedir.h"
+ #include "index.h"
 
 
  int main(const int argc, char *argv[]) {
@@ -26,14 +25,14 @@
 
 
     // pageDirectory: just check if argv[1]/.crawler can be opened
-    if (!validateDirectory(argv[1], "/.crawler", "r")) {
+    if (!validateDirectory(argv[1], ".crawler", "r")) {
         fprintf(stderr, "%s is not a directory created by crawler\n", argv[1]);
         return 2;
     }
 
     
     // indexFilename: open will overwrite if already exists
-    if (!validateFile(argv[2])) {
+    if (!validateFile(argv[2], "w")) {
         fprintf(stderr, "couldn't create %s\n", argv[2]);
         return 3;
     }

@@ -7,12 +7,12 @@
  */
 
 
-#include "pagedir.h"
-#include "../libcs50/webpage.h"
-#include "../libcs50/bag.h"
-#include "../libcs50/hashtable.h"
 #include <math.h>
 #include <string.h>
+#include "pagedir.h"
+#include "webpage.h"
+#include "bag.h"
+#include "hashtable.h"
 
 
 /*** validateDirectory ***/
@@ -37,8 +37,8 @@ bool validateDirectory(const char *dirPath, const char *dummyName, const char* m
 
 /*** validateFile ***/
 // Creates a file if necessary to make sure fileName exists as af ile
-bool validateFile(const char *fileName) {
-    FILE *fp = fopen(fileName, "w");
+bool validateFile(const char *fileName, const char *mode) {
+    FILE *fp = fopen(fileName, mode);
 
     if (fp == NULL) {
         return false;

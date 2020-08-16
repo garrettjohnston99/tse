@@ -8,11 +8,11 @@
 
  #include <stdio.h>
  #include <string.h>
- #include "../libcs50/hashtable.h"
- #include "../libcs50/bag.h"
- #include "../common/pagedir.h"
- #include "../libcs50/webpage.h"
- #include "../libcs50/memory.h"
+ #include "hashtable.h"
+ #include "bag.h"
+ #include "webpage.h"
+ #include "memory.h"
+ #include "pagedir.h"
 
 
 
@@ -37,7 +37,7 @@ int main(const int argc, char *argv[]) {
     }
 
     /***** VALIDATE DIRECTORY *****/
-    if (!validateDirectory(argv[2], "/.crawler", "w")) {
+    if (!validateDirectory(argv[2], ".crawler", "w")) {
         fprintf(stderr, "%s is not a directory or unwriteable\n", argv[2]);
         return 3;
     }

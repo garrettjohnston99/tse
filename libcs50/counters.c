@@ -1,142 +1,195 @@
-/*
- * counters.c - CS50 counter module
- * Implements key/counter pairs
- * See counters.h
- * Garrett Johnston CS50 20X 
+/* 
+ * counters.c - see counters.h
+ * Implementation of counterset(key, count) pairs as linked list
+ * 
+ * Garrett Johnston CS50 20X
  */
 
  #include <stdio.h>
  #include <stdlib.h>
  #include "counters.h"
- #include "memory.h"
 
-/* Local data type for counters */
+
+/******** LOCAL TYPE *********/
 typedef struct counterNode {
-    int key; // Key, >= 0
-    int counter; // Counter
-    struct counterNode *next; // Next counter
+    int key; // >= 0
+    int counter; // Initialized to 1
+    struct counterNode *next;
 } counterNode_t;
 
-/* Global type */
+
+/******** LOCAL TYPE FUNCTIONS ********/
+static counterNode_t * counterNode_new(int key);
+
+
+/*
+ * counterNode_new - create a new node with given key
+ * Returns NULL if error allocating memory for node
+ */
+static counterNode_t * counterNode_new(int key) {
+    counterNode_t *node = malloc(sizeof(counterNode_t));
+    if (node == NULL) return NULL;
+
+    node->key = key;
+    node->counter = 1;
+    return node;
+}
+
+
+/******** GLOBAL TYPE ********/
 typedef struct counters {
     struct counterNode *head;
 } counters_t;
 
-/******** Functions ********/
-static counterNode_t * counterNode_new(int key);
 
-
-// Local: Make a new counternode_t with given key, see counters.h
-static counterNode_t * counterNode_new(int key) {
-    counterNode_t *node = count_malloc(sizeof(counterNode_t));
-    // Error allocating mem for node
-    if (node == NULL) return NULL;
-
-    node->key = key; 
-    node->counter = 1; // Initialize counter to 1
-    return node;
-}
-
-// Initialize new counters. See counters.h
+/*
+ * counters_new - see counters.h
+ * Returns NULL if error allocating memory for struct
+ */
 counters_t * counters_new(void) {
-    counters_t *ctrs = count_malloc(sizeof(counters_t));
-    // Error allocating mem for counters
+    counters_t *ctrs = malloc(sizeof(counters_t));
     if (ctrs == NULL) return NULL;
 
     ctrs->head = NULL;
     return ctrs;
 }
 
-// Add a new counter. See counters.h
+/* 
+ * counters_add - see counters.h
+ * Increments the counter for the given key
+ * returns 0 if ctrs is NULL or invalid key(negative)
+ * otherwise the value of the counter for the given key
+ */
 int counters_add(counters_t *ctrs, const int key) {
-    if (ctrs == NULL || key < 0) return 0; // Error w/ ctrs or invalid key
+    if (ctrs == NULL || key < 0) return 0;
 
-    // Traverse to see if key already exists
-    for (counterNode_t *trav = ctrs->head; trav != NULL; 
-    trav = trav->next) {
+    counterNode_t *trav = ctrs->head;
+    while (trav != NULL) {
         if (trav->key == key) {
+            // Found - increment and return
             trav->counter++;
-            return trav->counter; // Return counter of given key
+            return trav->counter;
         }
+
+        trav = trav->next;
     }
-    // Didn't find given key; need to create a new node and insert at head
+
+    // Need to insert a new key/count pair
     counterNode_t *new = counterNode_new(key);
     new->next = ctrs->head;
     ctrs->head = new;
-    return 1; // Counter of newly added node
+    return 1;
 }
 
-// Get counter associated with given key. See counters.h
+
+/*
+ * counters_get - see counters.h
+ * get the value of the counter corresponding to the given key
+ * returns 0 if counterset is NULL or key not found
+ */
 int counters_get(counters_t *ctrs, const int key) {
-    if (ctrs == NULL || key < 0) return 0; // Errors w/ ctrs or invalid key
+    if (ctrs == NULL || key < 0) return 0;
 
-    // Traverse to find key
-    for (counterNode_t *trav = ctrs->head; trav != NULL; 
-    trav = trav->next) {
+    counterNode_t *trav = ctrs->head;
+    while (trav != NULL) {
         if (trav->key == key) return trav->counter;
+
+        trav = trav->next;
     }
-    return 0; // Didn't find, return 0
+
+    // Didn't find
+    return 0;
 }
 
-// Set counter for a given key. See counters.h
+
+/*
+ * counters_set - see counters.h
+ * Set a counter for a given key, or add it if it doesn't exist
+ */
 bool counters_set(counters_t *ctrs, const int key, const int count) {
-    /***** OUT OF MEMORY CASE??? *****/
     if (ctrs == NULL || key < 0 || count < 0) return false;
 
-    for (counterNode_t *trav = ctrs->head; trav != NULL; 
-    trav = trav->next) {
+    counterNode_t *trav = ctrs->head;
+    while (trav != NULL) {
         if (trav->key == key) {
             trav->counter = count;
             return true;
         }
+
+        trav = trav->next;
     }
-    // Key doesn't exist; add
+
+    // Key didn't exist; need to add 
     counterNode_t *new = counterNode_new(key);
     new->counter = count;
+
     new->next = ctrs->head;
     ctrs->head = new;
+    
     return true;
 }
 
-// Print all counters to a given file. See counters.h
+
+/*
+ * counters_print - see counters.h
+ * Print all key/count pairs to a file
+ */
 void counters_print(counters_t *ctrs, FILE *fp) {
     if (fp != NULL) {
         if (ctrs != NULL) {
             fputc('{', fp);
-            for (counterNode_t *trav = ctrs->head; trav != NULL; 
-            trav = trav->next) {
+
+            counterNode_t *trav = ctrs->head;
+            while (trav != NULL) {
                 fprintf(fp, "%d=%d", trav->key, trav->counter);
                 if (trav->next != NULL) {
                     fputc(',', fp);
                 }
+
+                trav = trav->next;
             }
             fputc('}', fp);
             fputc('\n', fp);
         } else {
-            fprintf(fp, "null");
-        }
-    } 
-}
-
-// Iterate through all counters & do something to them with *itemfunc. See counters.h
-void counters_iterate(counters_t *ctrs, void *arg, void (*itemfunc)
-                        (void *arg, const int key, const int count)) {
-    if (ctrs != NULL && itemfunc != NULL) {
-        for (counterNode_t *trav = ctrs->head; trav != NULL; 
-        trav = trav->next) {
-            (*itemfunc)(arg, trav->key, trav->counter);
+            fprintf(fp, "null\n");
         }
     }
 }
 
-// Delete the entire counterset. See counters.h
+
+/*
+ * counters_iterate - see counters.h
+ * Iterate through counterset and call (itemfunc) on each pair
+ */
+void counters_iterate(counters_t *ctrs, void *arg,
+                    void (*itemfunc)(void *arg, const int key, const int count)) {
+
+    if (ctrs != NULL && itemfunc != NULL) {
+
+        counterNode_t *trav = ctrs->head;
+        while (trav != NULL) {
+            (*itemfunc)(arg, trav->key, trav->counter);
+
+            trav = trav->next;
+        }
+    }
+}
+
+
+/*
+ * counters_delete - see counters.h
+ * Delete the counterset, freeing each node
+ */
 void counters_delete(counters_t *ctrs) {
     if (ctrs != NULL) {
-        for (counterNode_t *node = ctrs->head; node != NULL;) {
-            counterNode_t *next = node->next;
-            count_free(node); 
-            node = next;
+
+        counterNode_t *trav = ctrs->head;
+        while (trav != NULL) {
+            counterNode_t *next = trav->next;
+            free(trav);
+            trav = next;
         }
-        count_free(ctrs);
+
+        free(ctrs);
     }
 }

@@ -5,9 +5,12 @@
  * Garrett Johnston CS50 20X
  */
 
+ #ifndef __INDEX_H
+ #define __INDEX_H
+
  #include <stdio.h>
- #include "../libcs50/hashtable.h"
- #include "../libcs50/counters.h"
+ #include "hashtable.h"
+ #include "counters.h"
 
 
  /***** INDEX STRUCT FUNCTIONS *****/
@@ -39,6 +42,14 @@ void index_increment(index_t *idx, const char *word, const int docID);
  * Leverages hashtable_insert
  */
 void index_insert(index_t *idx, const char *word, counters_t *ctrs);
+
+
+/***** INDEX_GET *****/
+/* Wrapper for hashtable_find. 
+ * Returns the counterset for the given key if successful
+ * NULL if index->ht is NULL, key is NULL, or key doesn't exist in ht
+ */
+counters_t * index_get(index_t *idx, const char *key);
 
 /***** INDEX_DELETE *****/
 /* Deletes the entire index
@@ -76,3 +87,5 @@ void index_save(const char *saveFile, index_t *idx);
  * Used in indextest.c
  */
 index_t * index_load(const char* indexFile);
+
+#endif // __INDEX_H

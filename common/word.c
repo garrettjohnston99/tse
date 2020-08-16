@@ -9,9 +9,19 @@
 
 
 // Normalize a word to all lowercase. See word.h
-void normalizeWord(char *word) {
-     for (char *p = word; *p; p++) {
-         *p = tolower(*p);
-     }
+int normalizeWord(char *word) {
+    int ret = -1;
+
+    for (int i=0; word[i] != '\0'; i++) {
+        // Non-whitespace character is non-alphabetical: flag -> false
+        if (!isspace(word[i]) && !isalpha(word[i])) {
+            if (ret == -1) ret = i;
+            continue;
+        }
+
+        word[i] = tolower(word[i]);
+    }
+
+    return ret;
  }
  
