@@ -85,10 +85,7 @@ void hashtable_print(hashtable_t *ht, FILE *fp,
         fprintf(fp, "{\n");
         if (itemprint != NULL) {
             for (int i=0; i<ht->mod; i++) {
-                // Make sure set at this index has been initialized
-                if (ht->array[i] != NULL) {
-                    set_print(ht->array[i], fp, itemprint);
-                }
+                set_print(ht->array[i], fp, itemprint);
             }
 
         } else {

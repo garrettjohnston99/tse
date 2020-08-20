@@ -277,19 +277,24 @@ counters_t * scoreSequence(index_t *idx, char *queryCopy, bool first) {
             // Counterset for this word from the index
             counters_t *wordctrs = index_get(idx, word);
 
-            // If NULL(word doesn't exist in index) just continue to next word
-            if (wordctrs != NULL) {
-                // First word in the andsequence, clone wordctrs into score
-                if (scores == NULL) {
-                    scores = counters_clone(wordctrs);
-                } else {
-                    // Merge word scores into total scores with a copy of wordctrs
-                    counters_t *wordcopy = counters_clone(wordctrs);
+            // If NULL, wordctrs should be an empty counterset to calculate intersection properly
+            bool notfound = wordctrs == NULL;
+            if (notfound) wordctrs = counters_new();
+            
+            // First word in the andsequence, clone wordctrs into score
+            if (scores == NULL) {
+                scores = counters_clone(wordctrs); 
+                if (notfound) counters_delete(wordctrs);
+            } else {
+                // Merge word scores into total scores with a copy of wordctrs
+                counters_t *wordcopy = counters_clone(wordctrs);
 
-                    counters_intersection(scores, wordcopy);
-                    counters_delete(wordcopy);
-                }
+                counters_intersection(scores, wordcopy);
+                counters_delete(wordcopy);
+
+                if (notfound) counters_delete(wordctrs);
             }
+        
         }
 
         // Prep next word in this andsequence
