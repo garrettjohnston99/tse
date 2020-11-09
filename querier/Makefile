@@ -1,22 +1,23 @@
-# Makefile for crawler
+# Makefile for querier
 # Garrett Johnston CS50 20X
 
-
-PROG = crawler
-OBJS = crawler.o 
-LIBS = ../libcs50/libcs50.a ../common/common.a -lm
+	
+PROG = querier
+OBJS = querier.o
+LIBS = ../common/common.a ../libcs50/libcs50.a  -lm 
 
 CC = gcc
 FLAGS = -I../common -I../libcs50
 CFLAGS = -Wall -pedantic -std=c11 -ggdb $(FLAGS)
 
+
 $(PROG): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o $(PROG)
 
+querier.o: 
 
-crawler.o: ../libcs50/webpage.h
 
-.PHONY: clean test 
+.PHONY: clean test
 
 test:
 	bash -v testing.sh
@@ -24,4 +25,3 @@ test:
 clean:
 	rm -f $(PROG)
 	rm -f *~ *.o 
-	rm -f testDir/*

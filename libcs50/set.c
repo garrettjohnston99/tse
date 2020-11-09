@@ -1,7 +1,7 @@
 /*
- * set.c
- * Implementation of unordered set of string/item pairs
- * See set.h
+ * set.c - see set.h
+ * Implementation of unordered set of string/void * pairs as linked list
+ * 
  * Garrett Johnston CS50 20X
  */
 
@@ -9,128 +9,162 @@
  #include <stdlib.h>
  #include <string.h>
  #include "set.h"
- #include "memory.h"
 
 
-/******** Local type ********/
+/******** LOCAL TYPE ********/
 typedef struct setNode {
-    char *key; // Pointer to key given to initialization function
+    char *key;
     void *item;
     struct setNode *next;
 } setNode_t;
 
-/********* Local functions ********/
+/******** LOCAL TYPE FUNCTIONS ********/
 static setNode_t * setNode_new(char *key, void *item);
 
 
-// Allocate and initialize new node. 
-static setNode_t * setNode_new(char *key, void *item) { 
-    setNode_t *node = count_malloc(sizeof(setNode_t));
-
-    // Error allocating mem for node
+/*
+* setNode_new
+* Initialize a new node for the set given key/item
+* Returns NULL if error allocating memory for node
+*/
+static setNode_t * setNode_new(char *key, void *item) {
+    setNode_t *node = malloc(sizeof(setNode_t));
     if (node == NULL) return NULL;
 
-    node->key = key; 
+    node->key = key;
     node->item = item;
+    node->next = NULL;
 
     return node;
 }
 
-/******** Global Type ********/
+
+/******** GLOBAL TYPE ********/
 typedef struct set {
     struct setNode *head;
 } set_t;
 
-// Initialize new set object. See set.h
-set_t *set_new(void) {
-    set_t *set = count_malloc(sizeof(set_t));
 
-    // Error allocating mem for set pointer
+/*
+ * set_new - see set.h
+ * Initialize new set_t struct with NULL head
+ * returns NULL if error allocating memory for struct
+ */
+set_t *set_new(void) {
+    set_t *set = malloc(sizeof(set_t));
     if (set == NULL) return NULL;
 
     set->head = NULL;
     return set;
 }
 
-// Insert a key/item pair into the set. If duplicate/bad arguments return false. 
-// Return true if successful insertion. See set.h
+
+/*
+ * set_insert - see set.h
+ * Insert a new key/item pair into the set
+ */
 bool set_insert(set_t *set, const char *key, void *item) {
     if (set == NULL || key == NULL || item == NULL) return false;
+
+    void *found = set_find(set, key);
+    // Key already exists in set
+    if (found != NULL) return false;
+
+    char *keyCopy = malloc(strlen(key)+1);
+    strcpy(keyCopy, key);
+
+    // New node inserted at head
+    setNode_t *newNode = setNode_new(keyCopy, item);
+    newNode->next = set->head;
+    set->head = newNode;
     
-    // Check if key exists
-    for (setNode_t *trav = set->head; trav != NULL; trav = trav->next) {
-        // Key already exists
-        if (strcmp(key, trav->key) == 0) return false;
-    }
-
-    // Copy given key to new address
-    char *k = count_malloc(strlen(key)+1);
-    strcpy(k, key);
-
-    // Create new node and insert at head
-    setNode_t *new = setNode_new(k, item);
-    new->next = set->head;
-    set->head = new;
-
     return true;
 }
 
-// Return the item corresponding to the given key, if it exists. See set.h
+
+/*
+ * set_find - see set.h
+ * Returns an item for the given key if it exists
+ */
 void *set_find(set_t *set, const char *key) {
     if (set == NULL || key == NULL) return NULL;
 
-    for (setNode_t *trav = set->head; trav != NULL; trav = trav->next) {
+    setNode_t *trav = set->head;
+    while (trav != NULL) {
         if (strcmp(key, trav->key) == 0) return trav->item;
+        trav = trav->next;
     }
-    // Key not found
+
+    // Not found
     return NULL;
 }
 
-// Print all items in the set to fp with (*itemprint) function. See set.h
+
+/*
+ * set_print - see set.h
+ * Prints all items in the set to fp
+ */
 void set_print(set_t *set, FILE *fp, 
                 void (*itemprint)(FILE *fp, const char *key, void *item)) {
+    
     if (set != NULL && fp != NULL) {
         if (itemprint != NULL) {
+            // Opening bracket
             fputc('{', fp);
-            for (setNode_t *trav = set->head; trav != NULL; trav = trav->next) {
-                // Function responsible for putting parens around items
+
+            setNode_t *trav = set->head;
+            while (trav != NULL) {
                 (*itemprint)(fp, trav->key, trav->item);
-                if (trav->next != NULL) {
-                    fputc(',', fp);
-                }
+                if (trav->next != NULL) fputc(',', fp);
+                trav = trav->next;
             }
+            
             fputc('}', fp);
         } else {
-            // Null itemprint function
+            // Null itemprint
             fprintf(fp, "{}");
         }
     }
     fputc('\n', fp);
 }
 
-// Iterate over given set and do (*itemfunc) to each item. See set.h
+
+/*
+ * set_iterate - see set.h
+ * Call (*itemfunc) on each item
+ */
 void set_iterate(set_t *set, void *arg,
                     void (*itemfunc)(void *arg, const char *key, void *item)) {
+    
     if (set != NULL && itemfunc != NULL) {
-        for (setNode_t *trav = set->head; trav != NULL; trav = trav->next) {
+
+        setNode_t *trav = set->head;
+        while (trav != NULL) {
             (*itemfunc)(arg, trav->key, trav->item);
+            trav = trav->next;
         }
     }
 }
 
-// Delete the entire set after calling (*itemdelete) on each item. See set.h
+
+/*
+ * set_delete - see set.h
+ * Deletes the set, freeing all keys and items(w/ itemdelete)
+ */
 void set_delete(set_t *set, void (*itemdelete)(void *item)) {
-    if (set != NULL && itemdelete != NULL) {
-        for (setNode_t *trav = set->head; trav != NULL; ) {
-            // Delete the item using given function if it's not null
-            (*itemdelete)(trav->item);
-            
-            count_free(trav->key); // Free the string key
+    if (set != NULL) {
+        
+        setNode_t *trav = set->head;
+        while (trav != NULL) {
+            if (itemdelete != NULL) (*itemdelete)(trav->item);
+
+            free(trav->key);
             setNode_t *next = trav->next;
-            count_free(trav); // Free this node
+            free(trav);
             trav = next;
         }
 
-        count_free(set);
+        free(set);
     }
+
 }
